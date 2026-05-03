@@ -7,11 +7,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 data class ProfileUiState(
-    val nama: String = "John Doe",
+    val nama: String = "Diwan Ramadhani Dwi Putra",
     val bio: String = "Android Developer",
-    val email: String = "john@example.com",
-    val phone: String = "+62 812 3456 7890",
-    val location: String = "Jakarta, Indonesia",
+    val email: String = "diwan.123140116@student.itera.ac.id",
+    val phone: String = "+6281278437207",
+    val location: String = "Lampung, Indonesia",
     val isDarkMode: Boolean = false,
     val isFollowing: Boolean = false
 )

@@ -24,7 +24,7 @@ class SettingsRepository(private val settings: Settings) {
         set(value) = settings.putString(KEY_SORT_ORDER, value)
 
     var profileName: String
-        get() = settings.getString(KEY_NAME, "John Doe")
+        get() = settings.getString(KEY_NAME, "Diwan Ramadhani Dwi Putra")
         set(value) = settings.putString(KEY_NAME, value)
 
     var profileBio: String
@@ -32,10 +32,10 @@ class SettingsRepository(private val settings: Settings) {
         set(value) = settings.putString(KEY_BIO, value)
 
     var profileEmail: String
-        get() = settings.getString(KEY_EMAIL, "john@example.com")
+        get() = settings.getString(KEY_EMAIL, "diwan.123140116@student.itera.ac.id")
         set(value) = settings.putString(KEY_EMAIL, value)
 
     var profilePhone: String
-        get() = settings.getString(KEY_PHONE, "+62 812 3456 7890")
+        get() = settings.getString(KEY_PHONE, "+6281278437207")
         set(value) = settings.putString(KEY_PHONE, value)
 }

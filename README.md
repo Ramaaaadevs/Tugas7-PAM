@@ -1,27 +1,101 @@
-This is a Kotlin Multiplatform project targeting Android.
+# Tugas Praktikum Minggu ke 7 — MyProfileApp (Local Data Storage)
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+**Nama:** Diwan Ramadhani Dwi Putra  
+**NIM:** 123140116  
+**Mata Kuliah:** Pengembangan Aplikasi Mobile (IF25-22017)
 
-### Build and Run Android Application
+## Deskripsi
 
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE’s toolbar or build it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:assembleDebug
-  ```
+Upgrade dari Notes App minggu sebelumnya, sekarang data notes beneran tersimpan di local database pakai **SQLDelight** — jadi nggak hilang lagi setiap kali app ditutup. Untuk settings seperti dark mode, nama, dan bio profil disimpan pakai **multiplatform-settings** (pengganti DataStore yang KMP-compatible).
 
----
+Arsitekturnya dipisah jadi dua modul: `composeApp` untuk UI layer, dan `shared` untuk logic + data layer. Repository jadi satu-satunya pintu masuk data ke ViewModel, dan UI otomatis update via Flow setiap kali ada perubahan di database.
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+Fitur yang diimplementasikan:
+- **SQLDelight** — database lokal dengan `.sq` schema file, semua query type-safe
+- **CRUD operations** — tambah, lihat, edit, hapus catatan
+- **Search** — pencarian real-time pakai `flatMapLatest` + query `LIKE` di SQL
+- **Toggle Favorite** — disimpan di kolom `isFavorite` di database, persist setelah app ditutup
+- **Settings persistent** — dark mode, nama, bio tersimpan lewat `multiplatform-settings` (SharedPreferences di Android)
+- **UI States** — loading indicator, empty state, content state sudah proper
+- **Offline-first** — semua data dari local DB, nggak butuh internet sama sekali
+
+## Screenshot
+
+<img src="SS.png" width="300">
+<img src="SS1.png" width="300">
+<img src="SS2.png" width="300">
+<img src="SS3.png" width="300">
+
+## Database Schema
+
+```sql
+CREATE TABLE Note (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    title      TEXT    NOT NULL,
+    content    TEXT    NOT NULL,
+    isFavorite INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+```
+
+Query yang tersedia: `selectAll`, `selectFavorites`, `search`, `selectById`, `insert`, `update`, `delete`, `toggleFavorite`.
+
+## Struktur Proyek
+
+```
+MyProfileApp/
+├── composeApp/                          → UI layer (Android)
+│   └── src/androidMain/kotlin/com/diwan/myprofileapp/
+│       ├── MainActivity.kt
+│       ├── navigation/
+│       │   ├── AppNavigation.kt         → NavHost + Scaffold + BottomNavBar + AppThemeWrapper
+│       │   └── Screen.kt                → sealed class routes
+│       └── screens/
+│           ├── NoteListScreen.kt        → list + search bar + loading/empty state
+│           ├── NoteScreens.kt           → AddNoteScreen, NoteDetailScreen, EditNoteScreen
+│           ├── FavoritesScreen.kt
+│           └── ProfileScreen.kt         → ProfileHeader, ProfileCard, dark mode toggle, EditProfileScreen
+│
+└── shared/                              → Data & logic layer (KMP)
+    └── src/
+        ├── commonMain/
+        │   ├── sqldelight/com/diwan/myprofileapp/db/
+        │   │   └── Note.sq              → SQL schema & semua queries
+        │   └── kotlin/com/diwan/myprofileapp/shared/
+        │       ├── data/
+        │       │   ├── DatabaseDriverFactory.kt  → expect class
+        │       │   ├── NoteItem.kt               → domain model
+        │       │   ├── NoteRepository.kt         → CRUD + Flow
+        │       │   └── SettingsRepository.kt     → key-value settings
+        │       └── viewmodel/
+        │           ├── NoteViewModel.kt          → search, CRUD, favorites
+        │           └── ProfileViewModel.kt       → profile state + dark mode
+        └── androidMain/kotlin/com/diwan/myprofileapp/shared/
+            ├── data/
+            │   └── DatabaseDriverFactory.kt     → actual (AndroidSqliteDriver)
+            └── viewmodel/
+                └── ViewModelFactory.kt          → inject repo ke ViewModel
+```
+
+## Cara Menjalankan
+
+1. Clone atau buka proyek di **Android Studio**
+2. Pastikan sudah ada:
+   - Android Studio Hedgehog atau lebih baru
+   - JDK 11
+   - Android SDK min API 24
+3. Jalankan Gradle sync — SQLDelight akan generate Kotlin code dari `Note.sq` secara otomatis
+4. Run ke emulator atau perangkat fisik
+
+> Kalau muncul error `No database found`, pastikan file `Note.sq` ada di path yang benar lalu run Gradle sync ulang.
+
+## Dependensi Utama
+
+```toml
+sqldelight        = "2.0.2"
+multiplatform-settings = "1.1.1"
+kotlinx-coroutines = "1.8.1"
+navigation-compose = "2.8.0"
+lifecycle         = "2.8.5"
+```
